@@ -1,6 +1,7 @@
 (use gauche.test)
 (use www.cgi.test)
 (use sxml.serializer)
+(use sxml.ssax)
 (use redis)
 
 (test-start "elepaio")
@@ -69,12 +70,17 @@
 
 (test-section "push CGI")
 
-(define post-content #?=(srl:sxml->xml `(content ,@content)))
+(define post-content (srl:sxml->xml `(content ,@content)))
 
-(run-cgi-script->sxml "push.cgi"
-                      :parameters `((room . ,room)
-                                    (user-id . ,user-id)
-                                    (thread-id . ,thread-id)
-                                    (content . ,post-content)))
+(test* "push.cgi"
+       `(*TOP* (ok (@ (entry-id "2"))))
+       (let-values (((header body)
+                     (run-cgi-script->sxml "./push.cgi"
+                                           :environment '((REQUEST_METHOD . "POST"))
+                                           :parameters `((room . ,room)
+                                                         (user-id . ,user-id)
+                                                         (thread-id . ,thread-id)
+                                                         (content . ,post-content)))))
+         body))
 
 (test-end)
