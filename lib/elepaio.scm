@@ -1,6 +1,8 @@
 (define-module elepaio
   (use gauche.sequence)
+  (use util.match)
   (use redis)
+
   (export elepaio-connect
           elepaio-push!
           elepaio-get-room-key
@@ -16,8 +18,7 @@
   (let ((red (car elep)))
     (let ((length (redis-lpush red (elepaio-get-room-key room)
                                (write-to-string
-                                `(elepaio-entry (room . ,room)
-                                                (user-id . ,user-id)
+                                `(elepaio-entry (user-id . ,user-id)
                                                 (thread-id . ,thread-id)
                                                 (content . ,content))))))
       (- length 1))))
@@ -26,5 +27,14 @@
   (string-append "elepaio:room:" room))
 
 (define (elepaio-get-latest-entries elep room number)
-  (map read-from-string
-       (redis-lrange (car elep) (elepaio-get-room-key room) (- number) -1)))
+  (let* ((total (redis-llen (car elep) (elepaio-get-room-key room)))
+         (start (max 0 (- total number)))
+         (stop (- total 1))
+         (count (- total start)))
+    (map (lambda (index x)
+           (let ((data (read-from-string x)))
+             (match data
+                    (`(elepaio-entry . ,rest)
+                     `(elepaio-entry (index . ,index) ,@rest)))))
+         (iota count start)
+         (redis-lrange (car elep) (elepaio-get-room-key room) start stop))))

@@ -1,2 +1,4 @@
+GOSH = $(HOME)/local/gauche/bin/gosh
+
 test: test.scm
-	gosh -I lib test.scm
+	$(GOSH) -I lib test.scm

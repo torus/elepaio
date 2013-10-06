@@ -1,0 +1,3 @@
+[submodule "public/lazy-dom"]
+	path = public/lazy-dom
+	url = git@github.com:torus/js-lazy-dom.git
