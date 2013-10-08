@@ -34,8 +34,8 @@ $(document).ready(function(){
                          var ele = e(doc)
 
                          ele.onsubmit = function() {
-                             if (textarea.value.match(/^\s*$/))
-                                 return false
+                             // if (textarea.value.match(/^\s*$/))
+                             //     return false
 
                              console.log("submit!", textarea.value)
                              var text = textarea.value

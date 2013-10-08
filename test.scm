@@ -143,9 +143,8 @@
 (elepaio-push! *elep* room thread-id user-id content)
 (elepaio-push! *elep* room thread-id user-id content)
 
-
 (test* "with after paramter"
-       2
+       3
        (let-values (((header body)
                      (run-cgi-script->sxml "./pull.cgi"
                                            :parameters `((room . ,room)
