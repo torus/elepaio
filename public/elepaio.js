@@ -62,7 +62,14 @@ $(document).ready(function(){
 
     $.get("pull.cgi", {room: room},
           function(msg) {
-              console.log(msg)
+              // console.log(msg)
+              var M = xmlmatch.M
+              var C = xmlmatch.C
+
+              var m = M("entries")
+              var e = document.createElement("xxx")
+              e.innerHTML = msg
+              console.log(e)
           })
     // $(container).append(make_message("やまや", "やまやまや")(document))
     // $(container).append(make_message("まや", "やまや")(document))
