@@ -66,10 +66,44 @@ $(document).ready(function(){
               var M = xmlmatch.M
               var C = xmlmatch.C
 
-              var m = M("entries")
+              var sp = function(x) {return x.nodeType == 3 && x.textContent.match(/\s*/)}
+
+              var m = M("xxx",
+                        C(M("entries",
+                            C(sp,
+                              M("entry",
+                                function(node) {
+                                    var ent = {}
+                                    var res = C(sp,
+                                                M("user-id", function(x){
+                                                    ent.user_id = x.textContent
+                                                    return true}),
+                                                M("thread-id", function(x){
+                                                    ent.thread_id = x.textContent
+                                                    return true}),
+                                                M("content",
+                                                  C(sp,
+                                                    M("screen-name", function(x){
+                                                        ent.name = x.textContent
+                                                        return true
+                                                    }),
+                                                    M("text", function(x){
+                                                        ent.text = x.textContent
+                                                        return true
+                                                    })))
+                                               )(node)
+                                    console.debug("ent", ent)
+                                    $(container).append(make_message(ent.name,
+                                                                     ent.text)(document))
+                                    return res
+                                }),
+                              M("error", function(x){console.log(x); return true})
+                             ))))
               var e = document.createElement("xxx")
               e.innerHTML = msg
               console.log(e)
+
+              console.log(m(e))
           })
     // $(container).append(make_message("やまや", "やまやまや")(document))
     // $(container).append(make_message("まや", "やまや")(document))
