@@ -15,8 +15,9 @@
 
 (define user-id 12345)
 (define thread-id 987654)
-(define content '((screen-name "Gwaihir")
-                  (text "Hi, there!")))
+(define (content n)
+  `((screen-name "Gwaihir")
+    (text ,#`"Hi, there! ,n")))
 (define room (string-append "test-room-" (x->string (sys-time))))
 
 (test-section "low level APIs")
@@ -31,7 +32,7 @@
 
 (test-section "post")
 
-(define index (elepaio-push! *elep* room thread-id user-id content))
+(define index (elepaio-push! *elep* room thread-id user-id (content 1)))
 
 (test* "index" 0 index)
 
@@ -42,7 +43,7 @@
 (test* "post"
        `(elepaio-entry (user-id . ,user-id)
                        (thread-id . ,thread-id)
-                       (content ,@content))
+                       (content ,@(content 1)))
        (read-from-string
         (vector-ref (redis-lrange *redis* (elepaio-get-room-key room) -1 -1) 0)))
 
@@ -52,26 +53,33 @@
        `((elepaio-entry (index . 0)
                         (user-id . ,user-id)
                         (thread-id . ,thread-id)
-                        (content ,@content)))
+                        (content ,@(content 1))))
        (elepaio-get-latest-entries *elep* room 10))
 
-(define index2 (elepaio-push! *elep* room thread-id user-id content))
+(define index2 (elepaio-push! *elep* room thread-id user-id (content 2)))
+
+(test* "get the second post"
+       `(elepaio-entry (user-id . ,user-id)
+                       (thread-id . ,thread-id)
+                       (content ,@(content 2)))
+       (read-from-string
+        (vector-ref (redis-lrange *redis* (elepaio-get-room-key room) -1 -1) 0)))
 
 (test* "get the recent posts"
        `((elepaio-entry (index . 0)
                         (user-id . ,user-id)
                         (thread-id . ,thread-id)
-                        (content ,@content))
+                        (content ,@(content 1)))
          (elepaio-entry (index . 1)
                         (user-id . ,user-id)
                         (thread-id . ,thread-id)
-                        (content ,@content)))
+                        (content ,@(content 2))))
        (elepaio-get-latest-entries *elep* room 10))
 
 
 (test-section "push CGI")
 
-(define post-content (srl:sxml->xml `(content ,@content)))
+(define post-content (srl:sxml->xml `(content ,@(content 3))))
 (define (check-match pat expr)
   (guard (exc (else #f))
          (eval `(match (quote ,expr) (,pat #t)) (interaction-environment))))
@@ -138,10 +146,10 @@
          body)
        check-match)
 
-(elepaio-push! *elep* room thread-id user-id content)
-(elepaio-push! *elep* room thread-id user-id content)
-(elepaio-push! *elep* room thread-id user-id content)
-(elepaio-push! *elep* room thread-id user-id content)
+(elepaio-push! *elep* room thread-id user-id (content 4))
+(elepaio-push! *elep* room thread-id user-id (content 5))
+(elepaio-push! *elep* room thread-id user-id (content 6))
+(elepaio-push! *elep* room thread-id user-id (content 7))
 
 (test* "with after paramter"
        3

@@ -17,7 +17,7 @@
 
 (define (elepaio-push! elep room thread-id user-id content)
   (let ((red (car elep)))
-    (let ((length (redis-lpush red (elepaio-get-room-key room)
+    (let ((length (redis-rpush red (elepaio-get-room-key room)
                                (write-to-string
                                 `(elepaio-entry (user-id . ,user-id)
                                                 (thread-id . ,thread-id)
