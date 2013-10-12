@@ -68,12 +68,16 @@ $(document).ready(function(){
 
               var sp = function(x) {return x.nodeType == 3 && x.textContent.match(/\s*/)}
 
+              var last_index = 0
+
               var m = M("xxx",
                         C(M("entries",
                             C(sp,
                               M("entry",
                                 function(node) {
                                     var ent = {}
+                                    var index = node.getAttribute("index")
+                                    last_index = Math.max(last_index, index)
                                     var res = C(sp,
                                                 M("user-id", function(x){
                                                     ent.user_id = x.textContent
@@ -102,8 +106,9 @@ $(document).ready(function(){
               var e = document.createElement("xxx")
               e.innerHTML = msg
               console.log(e)
-
-              console.log(m(e))
+              var result = m(e)
+              console.log(result)
+              console.log(last_index)
           })
     // $(container).append(make_message("やまや", "やまやまや")(document))
     // $(container).append(make_message("まや", "やまや")(document))
