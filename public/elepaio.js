@@ -7,6 +7,56 @@ function make_message(name, text) {
                     E_("div", {class: "panel-body"}, text))))
 }
 
+function match_and_append_message(msg, container) {
+    // console.log(msg)
+    var M = xmlmatch.M
+    var C = xmlmatch.C
+
+    var sp = function(x) {return x.nodeType == 3 && x.textContent.match(/\s*/)}
+
+    var last_index = 0
+
+    var m = M("xxx",
+              C(M("entries",
+                  C(sp,
+                    M("entry",
+                      function(node) {
+                          var ent = {}
+                          var index = node.getAttribute("index")
+                          last_index = Math.max(last_index, index)
+                          var res = C(sp,
+                                      M("user-id", function(x){
+                                          ent.user_id = x.textContent
+                                          return true}),
+                                      M("thread-id", function(x){
+                                          ent.thread_id = x.textContent
+                                          return true}),
+                                      M("content",
+                                        C(sp,
+                                          M("screen-name", function(x){
+                                              ent.name = x.textContent
+                                              return true
+                                          }),
+                                          M("text", function(x){
+                                              ent.text = x.textContent
+                                              return true
+                                          })))
+                                     )(node)
+                          console.debug("ent", ent)
+                          $(container).append(make_message(ent.name,
+                                                           ent.text)(document))
+                          return res
+                      }),
+                    M("error", function(x){console.log(x); return true})
+                   ))))
+    var e = document.createElement("xxx")
+    e.innerHTML = msg
+    console.log(e)
+    var result = m(e)
+    console.log(result)
+    console.log(last_index)
+}
+
 $(document).ready(function(){
     var room = "elepaio"
     var container
@@ -62,53 +112,7 @@ $(document).ready(function(){
 
     $.get("pull.cgi", {room: room},
           function(msg) {
-              // console.log(msg)
-              var M = xmlmatch.M
-              var C = xmlmatch.C
-
-              var sp = function(x) {return x.nodeType == 3 && x.textContent.match(/\s*/)}
-
-              var last_index = 0
-
-              var m = M("xxx",
-                        C(M("entries",
-                            C(sp,
-                              M("entry",
-                                function(node) {
-                                    var ent = {}
-                                    var index = node.getAttribute("index")
-                                    last_index = Math.max(last_index, index)
-                                    var res = C(sp,
-                                                M("user-id", function(x){
-                                                    ent.user_id = x.textContent
-                                                    return true}),
-                                                M("thread-id", function(x){
-                                                    ent.thread_id = x.textContent
-                                                    return true}),
-                                                M("content",
-                                                  C(sp,
-                                                    M("screen-name", function(x){
-                                                        ent.name = x.textContent
-                                                        return true
-                                                    }),
-                                                    M("text", function(x){
-                                                        ent.text = x.textContent
-                                                        return true
-                                                    })))
-                                               )(node)
-                                    console.debug("ent", ent)
-                                    $(container).append(make_message(ent.name,
-                                                                     ent.text)(document))
-                                    return res
-                                }),
-                              M("error", function(x){console.log(x); return true})
-                             ))))
-              var e = document.createElement("xxx")
-              e.innerHTML = msg
-              console.log(e)
-              var result = m(e)
-              console.log(result)
-              console.log(last_index)
+              match_and_append_message(msg, container)
           })
     // $(container).append(make_message("やまや", "やまやまや")(document))
     // $(container).append(make_message("まや", "やまや")(document))
