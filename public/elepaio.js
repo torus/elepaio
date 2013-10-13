@@ -175,9 +175,11 @@ $(document).ready(function(){
                       // double the interval (up to 1 minite) if no message received
                       interval = Math.min(interval * 2, 60 * 1000)
                   }
-                  setTimeout(reload, interval)
+                  timeout_id = setTimeout(reload, interval)
+                  console.log("interval", interval)
               })
             .fail(function() {
+                clearTimeout(timeout_id)
                 console.log("Failed")
             })
     }
