@@ -55,6 +55,8 @@ function match_and_append_message(msg, container) {
     var result = m(e)
     console.log(result)
     console.log(last_index)
+
+    return last_index
 }
 
 $(document).ready(function(){
@@ -110,10 +112,23 @@ $(document).ready(function(){
 
     $(document.body).append(e(document))
 
+    var last_index = 0
     $.get("pull.cgi", {room: room},
           function(msg) {
-              match_and_append_message(msg, container)
+              last_index = match_and_append_message(msg, container)
           })
+
+    var int_id = setInterval(function() {
+        $.get("pull.cgi", {room: room, after: last_index},
+              function(msg) {
+                  last_index = Math.max(last_index,
+                                        match_and_append_message(msg, container))
+              })
+            .fail(function() {
+                console.log("Failed")
+                clearInterval(int_id)
+            })
+    }, 1000)
     // $(container).append(make_message("やまや", "やまやまや")(document))
     // $(container).append(make_message("まや", "やまや")(document))
 })
