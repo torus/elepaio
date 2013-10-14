@@ -79,11 +79,28 @@ function message_form(room, onsubmit) {
               E_("div", {class: "col-md-12"},
                  function(doc) {
                      var textarea
+                     var name_input
                      var e = E_("form", {role: "form"},
                                 E_("div", {class: "form-group"},
+                                   E_("label", {for: "name_textinput"},
+                                      "Your Name"),
                                    function(doc) {
-                                       var e =
-                                           E_("textarea", {class: "form-control", rows: 3})
+                                       var e = E_("input",
+                                                  {class: "form-control",
+                                                   type: "text",
+                                                   id: "name_textinput"}, "")
+                                       var ele = e(doc)
+                                       name_input = ele
+                                       return ele
+                                   }),
+                                E_("div", {class: "form-group"},
+                                   E_("label", {for: "message_body_textarea"},
+                                      "Message"),
+                                   function(doc) {
+                                       var e = E_("textarea",
+                                                  {class: "form-control",
+                                                   id: "message_body_textarea",
+                                                   rows: 2}, "")
                                        var ele = e(doc)
                                        textarea = ele
                                        return ele
@@ -93,12 +110,16 @@ function message_form(room, onsubmit) {
                      var ele = e(doc)
 
                      ele.onsubmit = function() {
-                         // if (textarea.value.match(/^\s*$/))
-                         //     return false
+                         if (textarea.value.match(/^\s*$/)) {
+                             return false
+                         }
+                         if (name_input.value.match(/^\s*$/)) {
+                             return false
+                         }
 
                          console.log("submit!", textarea.value)
                          var text = textarea.value
-                         var screen_name = "とおる。"
+                         var screen_name = name_input.value
                          textarea.value = ""
                          var content_xml = E_("xxx", {},
                                               E_("content", {},
@@ -170,10 +191,16 @@ $(document).ready(function(){
                   var idx = match_and_append_message(msg, add_message)
                   if (idx > last_index) {
                       last_index = idx
-                      interval = 500
+                      interval = 400
+
+                      var body = $(document.body)
+                      if (body.height() - (body.scrollTop() + $(window).height()) < 70) {
+                          body.scrollTop(body.height() - $(window).height())
+                      }
+
                   } else {
                       // double the interval (up to 1 minite) if no message received
-                      interval = Math.min(interval * 2, 60 * 1000)
+                      interval = Math.min(interval * 1.2, 60 * 1000)
                   }
                   timeout_id = setTimeout(reload, interval)
                   console.log("interval", interval)
