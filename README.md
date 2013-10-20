@@ -3,6 +3,8 @@ elepaio
 
 Online text chat system working with Redis and Pusher.
 
+Demo -> http://torus.jp:8080
+
 SYSTEM REQUIREMENTS
 -------------------
 
