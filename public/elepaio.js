@@ -1,4 +1,17 @@
 +function() {
+Pusher.log = function(message) {
+    if (window.console && window.console.log) {
+        window.console.log(message);
+    }
+};
+
+function make_pusher(room) {
+    var pusher = new Pusher('836e48f052310de70869');
+    var channel = pusher.subscribe("room_" + room);
+
+    return channel
+}
+
 function make_message(name, text) {
     return E_("tr", {},
               E_("td", {},
@@ -66,10 +79,10 @@ function match_and_append_message(msg, add_message) {
                    ))))
     var e = document.createElement("xxx")
     e.innerHTML = msg
-    console.log(e)
+    // console.log(e)
     var result = m(e)
-    console.log(result)
-    console.log(last_index)
+    // console.log(result)
+    // console.log(last_index)
 
     return last_index
 }
@@ -161,6 +174,7 @@ $(document).ready(function(){
     var interval = 1000
     var timeout_id
     var container
+    var title = document.title = room + " - chat"
     var e = E_("div", {class: "container", style: "padding-top: 70px"},
                function(doc) {
                    var e = E_("div", {id: "messages"})(doc)
@@ -168,9 +182,8 @@ $(document).ready(function(){
                    return e
                },
                message_form(room, function() {
-                   interval = 500
                    clearTimeout(timeout_id)
-                   timeout_id = setTimeout(reload, interval)
+                   reload()
                }))
 
     $(document.body)
@@ -185,13 +198,23 @@ $(document).ready(function(){
               last_index = match_and_append_message(msg, add_message)
           })
 
+    var badge = 0
     var reload = function() {
         $.get("pull.cgi", {room: room, after: last_index},
               function(msg) {
                   var idx = match_and_append_message(msg, add_message)
                   if (idx > last_index) {
+                      if (! document.hasFocus()) {
+                          badge += (idx - last_index)
+                          document.title = "[" + badge + "]" + title
+                          $(window).focus(function() {
+                              document.title = title
+                              badge = 0
+                          })
+                      }
+
                       last_index = idx
-                      interval = 400
+                      interval = 1000
 
                       var body = $(document.body)
                       if (body.height() - (body.scrollTop() + $(window).height()) < 70) {
@@ -200,10 +223,10 @@ $(document).ready(function(){
 
                   } else {
                       // double the interval (up to 1 minite) if no message received
-                      interval = Math.min(interval * 1.2, 60 * 1000)
+                      interval = Math.min(interval * 2, 60 * 1000)
                   }
                   timeout_id = setTimeout(reload, interval)
-                  console.log("interval", interval)
+                  // console.log("interval", interval)
               })
             .fail(function() {
                 clearTimeout(timeout_id)
@@ -211,6 +234,15 @@ $(document).ready(function(){
             })
     }
     timeout_id = setTimeout(reload, interval)
+
+    var pusher_channel = make_pusher(room)
+    pusher_channel.bind('update', function(data) {
+        if (data.index > last_index) {
+            clearTimeout(timeout_id)
+            reload()
+            // console.log(data);
+        }
+    });
 })
 
 }()

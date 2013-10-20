@@ -7,8 +7,8 @@
           elepaio-push!
           elepaio-get-room-key
           elepaio-get-entries
-          elepaio-get-latest-entries)
-)
+          elepaio-get-latest-entries
+          ))
 
 (select-module elepaio)
 

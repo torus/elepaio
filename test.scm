@@ -6,6 +6,8 @@
 
 (use redis)
 
+(test-record-file "test.record")
+
 (test-start "elepaio")
 (use elepaio)
 (test-module 'elepaio)
