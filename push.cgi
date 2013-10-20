@@ -14,8 +14,8 @@
 (use pusher)
 
 (define *elep* (elepaio-connect (redis-open "127.0.0.1" 6379)))
-(define *pusher-key* (file->string "PUSHER_KEY"))
 (define *pusher-app-id* (file->string "PUSHER_APP_ID"))
+(define *pusher-key* (file->string "PUSHER_KEY"))
 (define *pusher-secret* (file->string "PUSHER_SECRET"))
 
 (define (main args)

@@ -1,4 +1,6 @@
 +function() {
+var PUSHER_KEY = '836e48f052310de70869'
+
 Pusher.log = function(message) {
     if (window.console && window.console.log) {
         window.console.log(message);
@@ -6,7 +8,7 @@ Pusher.log = function(message) {
 };
 
 function make_pusher(room) {
-    var pusher = new Pusher('836e48f052310de70869');
+    var pusher = new Pusher(PUSHER_KEY);
     var channel = pusher.subscribe("room_" + room);
 
     return channel
