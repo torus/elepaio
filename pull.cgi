@@ -21,7 +21,7 @@
          (let1 entries (if after
                            (elepaio-get-entries *elep* room (x->integer after) count)
                            (elepaio-get-latest-entries *elep* room count))
-               `(,(cgi-header)
+               `(,(cgi-header :content-type "text/html; charset=UTF-8")
                  ,(srl:sxml->xml
                    `(*TOP* (entries
                             (@ (room ,room))

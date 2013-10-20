@@ -41,5 +41,5 @@
                     )
                (http-post "api.pusherapp.com"
                           (append uri `((auth_signature ,sign))) json))
-             `(,(cgi-header)
+             `(,(cgi-header :content-type "text/html; charset=UTF-8")
                ,(srl:sxml->xml `(ok (@ (index ,index))))))))))
