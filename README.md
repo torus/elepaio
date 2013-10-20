@@ -7,6 +7,7 @@ SYSTEM REQUIREMENTS
 -------------------
 
 - Gauche http://practical-scheme.net/gauche/
+- Gauche-makiki https://github.com/shirok/Gauche-makiki
 - Gauche-redis https://github.com/bizenn/Gauche-redis
 - Redis http://redis.io
 
