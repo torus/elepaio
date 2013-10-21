@@ -1,8 +1,8 @@
 GOSH = $(HOME)/local/gauche/bin/gosh
 
-all: test run
+all: check run
 
-test: test.scm
+check: test.scm
 	@rm -f test.record test.log
 	$(GOSH) -I lib test.scm >> test.log
 	$(GOSH) -I lib test-pusher.scm >> test.log

@@ -1,4 +1,5 @@
 (use gauche.test)
+(use file.util)
 (use www.cgi.test)
 (use sxml.serializer)
 (use sxml.ssax)
@@ -14,6 +15,7 @@
 
 
 (define *redis* (redis-open "127.0.0.1" 6379))
+(define *pusher-key* (file->string "PUSHER_KEY"))
 
 (define user-id 12345)
 (define thread-id 987654)
@@ -78,6 +80,13 @@
                         (content ,@(content 2))))
        (elepaio-get-latest-entries *elep* room 10))
 
+(test-section "app ID CGI")
+
+(test* "pusher-key.cgi"
+       #`"function PUSHER_KEY(){return \",|*pusher-key*|\"}"
+       (let-values (((header body)
+                     (run-cgi-script->string "./pusher-key.cgi")))
+         body))
 
 (test-section "push CGI")
 
