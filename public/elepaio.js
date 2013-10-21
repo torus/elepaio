@@ -1,6 +1,4 @@
 +function() {
-var PUSHER_KEY = '836e48f052310de70869'
-
 Pusher.log = function(message) {
     if (window.console && window.console.log) {
         window.console.log(message);
@@ -8,7 +6,7 @@ Pusher.log = function(message) {
 };
 
 function make_pusher(room) {
-    var pusher = new Pusher(PUSHER_KEY);
+    var pusher = new Pusher(PUSHER_KEY());
     var channel = pusher.subscribe("room_" + room);
 
     return channel
@@ -55,27 +53,31 @@ function match_and_append_message(msg, add_message) {
                       function(node) {
                           var ent = {}
                           var index = node.getAttribute("index")
-                          last_index = Math.max(last_index, index)
-                          var res = C(sp,
-                                      M("user-id", function(x){
-                                          ent.user_id = x.textContent
-                                          return true}),
-                                      M("thread-id", function(x){
-                                          ent.thread_id = x.textContent
-                                          return true}),
-                                      M("content",
-                                        C(sp,
-                                          M("screen-name", function(x){
-                                              ent.name = x.textContent
-                                              return true
-                                          }),
-                                          M("text", function(x){
-                                              ent.text = x.textContent
-                                              return true
-                                          })))
-                                     )(node)
-                          add_message(ent)
-                          return res
+                          if (index > last_index) {
+                              last_index = Math.max(last_index, index)
+                              var res = C(sp,
+                                          M("user-id", function(x){
+                                              ent.user_id = x.textContent
+                                              return true}),
+                                          M("thread-id", function(x){
+                                              ent.thread_id = x.textContent
+                                              return true}),
+                                          M("content",
+                                            C(sp,
+                                              M("screen-name", function(x){
+                                                  ent.name = x.textContent
+                                                  return true
+                                              }),
+                                              M("text", function(x){
+                                                  ent.text = x.textContent
+                                                  return true
+                                              })))
+                                         )(node)
+                              add_message(ent)
+                              return res
+                          } else {
+                              return false
+                          }
                       }),
                     M("error", function(x){console.log(x); return true})
                    ))))
