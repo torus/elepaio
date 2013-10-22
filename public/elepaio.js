@@ -44,7 +44,7 @@ function match_and_append_message(msg, add_message) {
 
     var sp = function(x) {return x.nodeType == 3 && x.textContent.match(/\s*/)}
 
-    var last_index = 0
+    var last_index = -1
 
     var m = M("xxx",
               C(M("entries",
@@ -53,8 +53,9 @@ function match_and_append_message(msg, add_message) {
                       function(node) {
                           var ent = {}
                           var index = node.getAttribute("index")
-                          if (index > last_index) {
-                              last_index = Math.max(last_index, index)
+                          // console.log("index", index)
+                          if (index != null && +index > last_index) {
+                              last_index = +index
                               var res = C(sp,
                                           M("user-id", function(x){
                                               ent.user_id = x.textContent
@@ -76,6 +77,7 @@ function match_and_append_message(msg, add_message) {
                               add_message(ent)
                               return res
                           } else {
+                              // console.log("end", node, index, last_index)
                               return false
                           }
                       }),
@@ -179,14 +181,15 @@ $(document).ready(function(){
     var timeout_id
     var container
     var title = document.title = room + " - chat"
-    var e = E_("div", {class: "container", style: "padding-top: 70px"},
+    var e = E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
                function(doc) {
                    var e = E_("div", {id: "messages"})(doc)
                    container = e
                    return e
                },
                message_form(room, function() {
-                   clearTimeout(timeout_id)
+                   if (timeout_id) clearTimeout(timeout_id)
+                   timeout_id = null
                    reload()
                }))
 
@@ -200,6 +203,13 @@ $(document).ready(function(){
     $.get("pull.cgi", {room: room},
           function(msg) {
               last_index = match_and_append_message(msg, add_message)
+              setTimeout(function() {
+                  var body = $(document.body)
+                  var scrollto = Math.max(0, body.height() - $(window).height())
+                  body.animate({scrollTop: scrollto}, function() {
+                      console.log("scroll complete")
+                  })
+              }, 10)
           })
 
     var badge = 0
@@ -233,7 +243,8 @@ $(document).ready(function(){
                   // console.log("interval", interval)
               })
             .fail(function() {
-                clearTimeout(timeout_id)
+                if (timeout_id) clearTimeout(timeout_id)
+                timeout_id = null
                 console.log("Failed")
             })
     }
@@ -242,7 +253,8 @@ $(document).ready(function(){
     var pusher_channel = make_pusher(room)
     pusher_channel.bind('update', function(data) {
         if (data.index > last_index) {
-            clearTimeout(timeout_id)
+            if (timeout_id) clearTimeout(timeout_id)
+            timeout_id = null
             reload()
             // console.log(data);
         }
