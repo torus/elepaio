@@ -3,7 +3,7 @@ elepaio
 
 Online text chat system working with Redis and Pusher.
 
-Demo -> http://torus.jp:8080
+Demo -> http://scrw.in:8080
 
 SYSTEM REQUIREMENTS
 -------------------
@@ -28,11 +28,6 @@ Store your app ID, key and secret into files respectively:
 - PUSHER_KEY
 - PUSHER_SECRET
 
-### Client Side
-
-Edit `public/elepaio.js` and replace the value of `PUSHER_KEY` with your own key.
-
-    var PUSHER_KEY = '836e48f052310de70869'
 
 AUTHOR
 ------
