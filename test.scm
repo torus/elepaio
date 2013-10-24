@@ -5,6 +5,7 @@
 (use sxml.ssax)
 (use util.match)
 
+(use testutils)
 (use redis)
 
 (test-record-file "test.record")
@@ -91,11 +92,13 @@
 (test-section "push CGI")
 
 (define post-content (srl:sxml->xml `(content ,@(content 3))))
-(define (check-match pat expr)
-  (guard (exc (else #f))
-         (eval `(match (quote ,expr) (,pat #t)) (interaction-environment))))
 
-(test* "check-match"
+(test* "check-match number"
+       '(? number?)
+       33
+       check-match)
+
+(test* "check-match list"
        '(_ _ (1 2 (? string?)))
        '(abc def (1 2 "34"))
        check-match)
