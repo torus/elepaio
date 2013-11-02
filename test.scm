@@ -33,7 +33,7 @@
 
 (test-section "initialize")
 
-(define *elep* (elepaio-connect *redis*))
+(define *elep* (elepaio-connect *redis* 0))
 
 (test-section "post")
 
@@ -80,6 +80,21 @@
                         (thread-id . ,thread-id)
                         (content ,@(content 2))))
        (elepaio-get-latest-entries *elep* room 10))
+
+
+(test-section "register CGI")
+
+(match-define `(*TOP* (user (@ (key ,key) (id ,idstr))))
+              (let-values (((header body)
+                            (run-cgi-script->sxml "./register.cgi")))
+                   body))
+(define id (read-from-string idstr))
+
+(test* "id" #t (number? id))
+(test* "key" #t (string? key))
+
+(test* "key registered" id
+       (read-from-string (redis-hget *redis* "elepaio:user:keys" key)))
 
 (test-section "app ID CGI")
 
@@ -173,5 +188,6 @@
                                                          (after . 3)))))
          (length (cddadr body)))
        check-match)
+
 
 (test-end)
