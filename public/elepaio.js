@@ -175,8 +175,10 @@ function navbar(room) {
                 ))
 }
 
-$(document).ready(function(){
-    var room = "elepaio"
+var ChatBoard = function(room) {
+
+// $(document).ready(function(){
+//     var room = "elepaio"
     var interval = 1000
     var timeout_id
     var container
@@ -259,6 +261,10 @@ $(document).ready(function(){
             // console.log(data);
         }
     });
+}
+
+$(document).ready(function(){
+    var board = new ChatBoard("elepaio")
 })
 
 }()
