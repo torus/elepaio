@@ -187,10 +187,10 @@ var ChatBoard = function(room) {
 
     self.add_message = message_adder(self.container)
 
-    var last_index = 0
+    self.last_index = 0
     $.get("/1/pull", {room: self.room},
           function(msg) {
-              last_index = match_and_append_message(msg, self.add_message)
+              self.last_index = match_and_append_message(msg, self.add_message)
               setTimeout(function() {
                   var body = $(document.body)
                   var scrollto = Math.max(0, body.height() - $(window).height())
@@ -200,48 +200,11 @@ var ChatBoard = function(room) {
               }, 10)
           })
 
-    var badge = 0
-    var title = document.title = self.room + " - chat"
-    self.reload = function() {
-        $.get("/1/pull", {room: self.room, after: last_index},
-              function(msg) {
-                  var idx = match_and_append_message(msg, self.add_message)
-                  if (idx > last_index) {
-                      if (! document.hasFocus()) {
-                          badge += (idx - last_index)
-                          document.title = "[" + badge + "]" + title
-                          $(window).focus(function() {
-                              document.title = title
-                              badge = 0
-                          })
-                      }
-
-                      last_index = idx
-                      self.interval = 1000
-
-                      var body = $(document.body)
-                      if (body.height() - (body.scrollTop() + $(window).height()) < 70) {
-                          body.scrollTop(body.height() - $(window).height())
-                      }
-
-                  } else {
-                      // double the interval (up to 1 minite) if no message received
-                      self.interval = Math.min(self.interval * 2, 60 * 1000)
-                  }
-                  self.timeout_id = setTimeout(self.reload, self.interval)
-                  // console.log("self.interval", self.interval)
-              })
-            .fail(function() {
-                if (self.timeout_id) clearTimeout(self.timeout_id)
-                self.timeout_id = null
-                console.log("Failed")
-            })
-    }
-    self.timeout_id = setTimeout(self.reload, self.interval)
+    self.timeout_id = setTimeout(self.reload.bind(self), self.interval)
 
     var pusher_channel = make_pusher(self.room)
     pusher_channel.bind('update', function(data) {
-        if (data.index > last_index) {
+        if (data.index > self.last_index) {
             if (self.timeout_id) clearTimeout(self.timeout_id)
             self.timeout_id = null
             self.reload()
@@ -268,6 +231,46 @@ ChatBoard.prototype.make_container = function() {
     $(document.body)
         .append(navbar(self.room)(document))
         .append(e(document))
+}
+
+ChatBoard.prototype.reload = function() {
+    var self = this
+    var badge = 0
+    var title = document.title = self.room + " - chat"
+
+    $.get("/1/pull", {room: self.room, after: self.last_index},
+          function(msg) {
+              var idx = match_and_append_message(msg, self.add_message)
+              if (idx > self.last_index) {
+                  if (! document.hasFocus()) {
+                      badge += (idx - self.last_index)
+                      document.title = "[" + badge + "]" + title
+                      $(window).focus(function() {
+                          document.title = title
+                          badge = 0
+                      })
+                  }
+
+                  self.last_index = idx
+                  self.interval = 1000
+
+                  var body = $(document.body)
+                  if (body.height() - (body.scrollTop() + $(window).height()) < 70) {
+                      body.scrollTop(body.height() - $(window).height())
+                  }
+
+              } else {
+                  // double the interval (up to 1 minite) if no message received
+                  self.interval = Math.min(self.interval * 2, 60 * 1000)
+              }
+              self.timeout_id = setTimeout(self.reload, self.interval)
+              // console.log("self.interval", self.interval)
+          })
+        .fail(function() {
+            if (self.timeout_id) clearTimeout(self.timeout_id)
+            self.timeout_id = null
+            console.log("Failed")
+        })
 }
 
 $(document).ready(function(){
