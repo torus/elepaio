@@ -6,6 +6,7 @@
 (use sxml.serializer)
 (use sxml.ssax)
 (use rfc.http)
+(use rfc.cookie)
 (use redis)
 
 (add-load-path "./lib" :relative)
@@ -20,6 +21,9 @@
      (let ((key (elepaio-new-key! *elep*))
            (id (elepaio-new-id! *elep*)))
        (elepaio-register-key! *elep* id key)
-       `(,(cgi-header :content-type "text/html; charset=UTF-8")
+       `(,(cgi-header :content-type "text/html; charset=UTF-8"
+                      :cookies (construct-cookie-string
+                                `(("user-key" ,key
+                                   :expires ,(+ (sys-time) 3.15569e7)))))
          ,(srl:sxml->xml
            `(*TOP* (user (@ (id ,id) (key ,key))))))))))

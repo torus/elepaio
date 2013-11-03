@@ -11,6 +11,7 @@
 
 (add-load-path "./lib" :relative)
 (use elepaio)
+(use elepaio.id)
 (use pusher)
 
 (define *elep* (elepaio-connect (redis-open "127.0.0.1" 6379) 0))
@@ -18,12 +19,18 @@
 (define *pusher-key* (file->string "PUSHER_KEY"))
 (define *pusher-secret* (file->string "PUSHER_SECRET"))
 
+(define (get-user-id params)
+  (or (cgi-get-parameter "user-id" params)
+      (let1 key (cgi-get-parameter "user-key" params)
+            (and key (elepaio-lookup-key *elep* key)))
+      0))
+
 (define (main args)
   (cgi-main
    (lambda (params)
      (let ((room (cgi-get-parameter "room" params))
-           (thread-id (cgi-get-parameter "thread-id" params))
-           (user-id (cgi-get-parameter "user-id" params))
+           (thread-id (read-from-string (cgi-get-parameter "thread-id" params)))
+           (user-id (get-user-id params))
            (content (cdadr (ssax:xml->sxml (open-input-string
                                             (cgi-get-parameter "content" params)) ()))))
        (let1 index (elepaio-push! *elep* room thread-id user-id content)
@@ -42,4 +49,5 @@
                (http-post "api.pusherapp.com"
                           (append uri `((auth_signature ,sign))) json))
              `(,(cgi-header :content-type "text/html; charset=UTF-8")
-               ,(srl:sxml->xml `(ok (@ (index ,index))))))))))
+               ,(srl:sxml->xml `(ok (@ (index ,index))))))))
+   :merge-cookies #t))

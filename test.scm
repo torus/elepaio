@@ -84,17 +84,19 @@
 
 (test-section "register CGI")
 
-(match-define `(*TOP* (user (@ (key ,key) (id ,idstr))))
+(match-define ((("content-type" _)
+                ("set-cookie" (? #/user-key=/)))
+               `(*TOP* (user (@ (key ,user-key) (id ,idstr)))))
               (let-values (((header body)
                             (run-cgi-script->sxml "./register.cgi")))
-                   body))
-(define id (read-from-string idstr))
+                (list header body)))
+(define registered-user-id (read-from-string idstr))
 
-(test* "id" #t (number? id))
-(test* "key" #t (string? key))
+(test* "id" #t (number? registered-user-id))
+(test* "key" #t (string? user-key))
 
-(test* "key registered" id
-       (read-from-string (redis-hget *redis* "elepaio:user:keys" key)))
+(test* "key registered" registered-user-id
+       (read-from-string (redis-hget *redis* "elepaio:user:keys" user-key)))
 
 (test-section "app ID CGI")
 
@@ -108,39 +110,24 @@
 
 (define post-content (srl:sxml->xml `(content ,@(content 3))))
 
-(test* "check-match number"
-       '(? number?)
-       33
-       check-match)
-
-(test* "check-match list"
-       '(_ _ (1 2 (? string?)))
-       '(abc def (1 2 "34"))
-       check-match)
-
-(test* "check-match"
-       '(_ _ (1 2 (? string?)))
-       '(abc def (1 2 34))
-       (lambda (pat expr) (not (check-match pat expr))))
-
-(test* "check-match"
-       '((? number?)
-         (hoge (? string?)
-               (? number?)) ...)
-       '(10 (hoge "a" 1) (hoge "b" 2) (hoge "c" 3))
-       check-match)
-
 (test* "push.cgi"
        '`(*TOP* (ok (@ (index "2"))))
        (let-values (((header body)
                      (run-cgi-script->sxml "./push.cgi"
                                            :environment '((REQUEST_METHOD . "POST"))
                                            :parameters `((room . ,room)
-                                                         (user-id . ,user-id)
+                                                         (user-key . ,user-key)
                                                          (thread-id . ,thread-id)
                                                          (content . ,post-content)))))
          body)
        check-match)
+
+(test* "key and id"
+       `((elepaio-entry (index . 2)
+                        (user-id . ,registered-user-id)
+                        (thread-id . ,thread-id)
+                        (content ,@(content 3))))
+       (elepaio-get-latest-entries *elep* room 1))
 
 (test-section "pull CGI")
 
