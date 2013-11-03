@@ -181,16 +181,16 @@ var ChatBoard = function(room) {
     self.interval = 1000
     self.timeout_id
     self.room = room
-
-    self.make_container()
     self.container
 
-    var add_message = message_adder(self.container)
+    self.make_container()
+
+    self.add_message = message_adder(self.container)
 
     var last_index = 0
     $.get("/1/pull", {room: self.room},
           function(msg) {
-              last_index = match_and_append_message(msg, add_message)
+              last_index = match_and_append_message(msg, self.add_message)
               setTimeout(function() {
                   var body = $(document.body)
                   var scrollto = Math.max(0, body.height() - $(window).height())
@@ -202,10 +202,10 @@ var ChatBoard = function(room) {
 
     var badge = 0
     var title = document.title = self.room + " - chat"
-    var reload = function() {
+    self.reload = function() {
         $.get("/1/pull", {room: self.room, after: last_index},
               function(msg) {
-                  var idx = match_and_append_message(msg, add_message)
+                  var idx = match_and_append_message(msg, self.add_message)
                   if (idx > last_index) {
                       if (! document.hasFocus()) {
                           badge += (idx - last_index)
@@ -228,7 +228,7 @@ var ChatBoard = function(room) {
                       // double the interval (up to 1 minite) if no message received
                       self.interval = Math.min(self.interval * 2, 60 * 1000)
                   }
-                  self.timeout_id = setTimeout(reload, self.interval)
+                  self.timeout_id = setTimeout(self.reload, self.interval)
                   // console.log("self.interval", self.interval)
               })
             .fail(function() {
@@ -237,14 +237,14 @@ var ChatBoard = function(room) {
                 console.log("Failed")
             })
     }
-    self.timeout_id = setTimeout(reload, self.interval)
+    self.timeout_id = setTimeout(self.reload, self.interval)
 
     var pusher_channel = make_pusher(self.room)
     pusher_channel.bind('update', function(data) {
         if (data.index > last_index) {
             if (self.timeout_id) clearTimeout(self.timeout_id)
             self.timeout_id = null
-            reload()
+            self.reload()
             // console.log(data);
         }
     });
@@ -262,7 +262,7 @@ ChatBoard.prototype.make_container = function() {
                message_form(self.room, function() {
                    if (self.timeout_id) clearTimeout(self.timeout_id)
                    self.timeout_id = null
-                   reload()
+                   self.reload()
                }))
 
     $(document.body)
