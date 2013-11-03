@@ -180,22 +180,24 @@ var ChatBoard = function(room) {
 
     self.interval = 1000
     self.timeout_id
-    var container
-    var e = E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
-               function(doc) {
-                   var e = E_("div", {id: "messages"})(doc)
-                   container = e
-                   return e
-               },
-               message_form(room, function() {
-                   if (self.timeout_id) clearTimeout(self.timeout_id)
-                   self.timeout_id = null
-                   reload()
-               }))
 
-    $(document.body)
-        .append(navbar(room)(document))
-        .append(e(document))
+    self.make_container()
+    // var container
+    // var e = E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
+    //            function(doc) {
+    //                var e = E_("div", {id: "messages"})(doc)
+    //                container = e
+    //                return e
+    //            },
+    //            message_form(room, function() {
+    //                if (self.timeout_id) clearTimeout(self.timeout_id)
+    //                self.timeout_id = null
+    //                reload()
+    //            }))
+
+    // $(document.body)
+    //     .append(navbar(room)(document))
+    //     .append(e(document))
 
     var add_message = message_adder(container)
 
@@ -260,6 +262,26 @@ var ChatBoard = function(room) {
             // console.log(data);
         }
     });
+}
+
+ChatBoard.prototype.make_container = function() {
+    var self = this
+    var container
+    var e = E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
+               function(doc) {
+                   var e = E_("div", {id: "messages"})(doc)
+                   container = e
+                   return e
+               },
+               message_form(room, function() {
+                   if (self.timeout_id) clearTimeout(self.timeout_id)
+                   self.timeout_id = null
+                   reload()
+               }))
+
+    $(document.body)
+        .append(navbar(room)(document))
+        .append(e(document))
 }
 
 $(document).ready(function(){
