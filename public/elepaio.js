@@ -145,7 +145,7 @@ function message_form(room, onsubmit) {
                                                  E_("screen-name", {}, screen_name),
                                                  E_("text", {}, text)))(doc).innerHTML
                          console.log(content_xml)
-                         $.post("push.cgi", {
+                         $.post("/1/push", {
                              room: room,
                              "user-id": 123,
                              "thread-id": 0,
@@ -202,7 +202,7 @@ var ChatBoard = function(room) {
     var add_message = message_adder(container)
 
     var last_index = 0
-    $.get("pull.cgi", {room: room},
+    $.get("/1/pull", {room: room},
           function(msg) {
               last_index = match_and_append_message(msg, add_message)
               setTimeout(function() {
@@ -216,7 +216,7 @@ var ChatBoard = function(room) {
 
     var badge = 0
     var reload = function() {
-        $.get("pull.cgi", {room: room, after: last_index},
+        $.get("/1/pull", {room: room, after: last_index},
               function(msg) {
                   var idx = match_and_append_message(msg, add_message)
                   if (idx > last_index) {
