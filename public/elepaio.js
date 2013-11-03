@@ -180,29 +180,15 @@ var ChatBoard = function(room) {
 
     self.interval = 1000
     self.timeout_id
+    self.room = room
 
     self.make_container()
-    // var container
-    // var e = E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
-    //            function(doc) {
-    //                var e = E_("div", {id: "messages"})(doc)
-    //                container = e
-    //                return e
-    //            },
-    //            message_form(room, function() {
-    //                if (self.timeout_id) clearTimeout(self.timeout_id)
-    //                self.timeout_id = null
-    //                reload()
-    //            }))
+    self.container
 
-    // $(document.body)
-    //     .append(navbar(room)(document))
-    //     .append(e(document))
-
-    var add_message = message_adder(container)
+    var add_message = message_adder(self.container)
 
     var last_index = 0
-    $.get("/1/pull", {room: room},
+    $.get("/1/pull", {room: self.room},
           function(msg) {
               last_index = match_and_append_message(msg, add_message)
               setTimeout(function() {
@@ -215,9 +201,9 @@ var ChatBoard = function(room) {
           })
 
     var badge = 0
-    var title = document.title = room + " - chat"
+    var title = document.title = self.room + " - chat"
     var reload = function() {
-        $.get("/1/pull", {room: room, after: last_index},
+        $.get("/1/pull", {room: self.room, after: last_index},
               function(msg) {
                   var idx = match_and_append_message(msg, add_message)
                   if (idx > last_index) {
@@ -253,7 +239,7 @@ var ChatBoard = function(room) {
     }
     self.timeout_id = setTimeout(reload, self.interval)
 
-    var pusher_channel = make_pusher(room)
+    var pusher_channel = make_pusher(self.room)
     pusher_channel.bind('update', function(data) {
         if (data.index > last_index) {
             if (self.timeout_id) clearTimeout(self.timeout_id)
@@ -266,21 +252,21 @@ var ChatBoard = function(room) {
 
 ChatBoard.prototype.make_container = function() {
     var self = this
-    var container
+
     var e = E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
                function(doc) {
                    var e = E_("div", {id: "messages"})(doc)
-                   container = e
+                   self.container = e
                    return e
                },
-               message_form(room, function() {
+               message_form(self.room, function() {
                    if (self.timeout_id) clearTimeout(self.timeout_id)
                    self.timeout_id = null
                    reload()
                }))
 
     $(document.body)
-        .append(navbar(room)(document))
+        .append(navbar(self.room)(document))
         .append(e(document))
 }
 
