@@ -24,6 +24,9 @@
        `(,(cgi-header :content-type "text/html; charset=UTF-8"
                       :cookies (construct-cookie-string
                                 `(("user-key" ,key
-                                   :expires ,(+ (sys-time) 3.15569e7)))))
+                                   :path "/"
+                                   :expires ,(+ (sys-time) (* 60 60 24 365))
+                                   :max-age ,(* 60 60 24 365)))
+                                0))     ; old version cookie format for Set-Cookie header
          ,(srl:sxml->xml
            `(*TOP* (user (@ (id ,id) (key ,key))))))))))
