@@ -8,15 +8,19 @@
           elepaio-get-room-key
           elepaio-get-entries
           elepaio-get-latest-entries
+          elepaio-get-redis
           ))
 
 (select-module elepaio)
 
-(define (elepaio-connect redis)
+(define (elepaio-connect redis db)
+  (redis-select redis db)
   `(,redis))
 
+(define elepaio-get-redis car)
+
 (define (elepaio-push! elep room thread-id user-id content)
-  (let ((red (car elep)))
+  (let ((red (elepaio-get-redis elep)))
     (let ((length (redis-rpush red (elepaio-get-room-key room)
                                (write-to-string
                                 `(elepaio-entry (user-id . ,user-id)
@@ -37,11 +41,11 @@
                         (else
                          '(error)))))
              (iota count start)
-             (redis-lrange (car elep) (elepaio-get-room-key room)
+             (redis-lrange (elepaio-get-redis elep) (elepaio-get-room-key room)
                            start (+ after count)))))
 
 (define (elepaio-get-latest-entries elep room number)
-  (let* ((total (redis-llen (car elep) (elepaio-get-room-key room)))
+  (let* ((total (redis-llen (elepaio-get-redis elep) (elepaio-get-room-key room)))
          (start (max 0 (- total number)))
          (stop (- total 1))
          (count (- total start)))
@@ -53,4 +57,4 @@
                     (else
                      '(error)))))
          (iota count start)
-         (redis-lrange (car elep) (elepaio-get-room-key room) start stop))))
+         (redis-lrange (elepaio-get-redis elep) (elepaio-get-room-key room) start stop))))

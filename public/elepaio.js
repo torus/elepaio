@@ -93,7 +93,64 @@ function match_and_append_message(msg, add_message) {
     return last_index
 }
 
-function message_form(room, onsubmit) {
+function navbar(room) {
+    return E_("nav", {class: "navbar navbar-default navbar-fixed-top",
+                      role: "navigation"},
+              E_("div", {class: "navbar-header"},
+                 E_("button", {type: "button", class: "navbar-toggle",
+                               "data-toggle": "collapse",
+                               "data-target": ".navbar-ex1-collapse"},
+                    E_("span", {class: "sr-only"}, "Toggle navigation"),
+                    E_("span", {class: "icon-bar"}, ""),
+                    E_("span", {class: "icon-bar"}, ""),
+                    E_("span", {class: "icon-bar"}, "")),
+                 E_("a", {class: "navbar-brand", href: "#"}, room)
+                ))
+}
+
+var ChatBoard = function(params) {
+    var self = this
+
+    self.interval = 1000
+    self.timeout_id
+    self.room = params.room
+    self.user_key = params.user_key
+    self.container
+
+    self.make_container()
+
+    self.add_message = message_adder(self.container)
+
+    self.last_index = 0
+    console.log("pull 1", self)
+    $.get("/1/pull", {room: self.room},
+          function(msg) {
+              self.last_index = match_and_append_message(msg, self.add_message)
+              setTimeout(function() {
+                  var body = $(document.body)
+                  var scrollto = Math.max(0, body.height() - $(window).height())
+                  body.animate({scrollTop: scrollto}, function() {
+                      console.log("scroll complete")
+                  })
+              }, 10)
+          })
+
+    self.timeout_id = setTimeout(self.reload.bind(self), self.interval)
+
+    var pusher_channel = make_pusher(self.room)
+    pusher_channel.bind('update', function(data) {
+        if (data.index > self.last_index) {
+            if (self.timeout_id) clearTimeout(self.timeout_id)
+            self.timeout_id = null
+            self.reload()
+            // console.log(data);
+        }
+    });
+}
+
+ChatBoard.prototype.message_form = function(onsubmit) {
+    var self = this
+
     return E_("div", {class: "row"},
               E_("div", {class: "col-md-12"},
                  function(doc) {
@@ -104,10 +161,12 @@ function message_form(room, onsubmit) {
                                    E_("label", {for: "name_textinput"},
                                       "Your Name"),
                                    function(doc) {
+                                       var name = $.cookie("screen_name") || ""
                                        var e = E_("input",
                                                   {class: "form-control",
                                                    type: "text",
-                                                   id: "name_textinput"}, "")
+                                                   id: "name_textinput",
+                                                   value: name}, "")
                                        var ele = e(doc)
                                        name_input = ele
                                        return ele
@@ -136,6 +195,8 @@ function message_form(room, onsubmit) {
                              return false
                          }
 
+                         $.cookie("screen_name", name_input.value, {expires: 365})
+
                          console.log("submit!", textarea.value)
                          var text = textarea.value
                          var screen_name = name_input.value
@@ -145,9 +206,9 @@ function message_form(room, onsubmit) {
                                                  E_("screen-name", {}, screen_name),
                                                  E_("text", {}, text)))(doc).innerHTML
                          console.log(content_xml)
-                         $.post("push.cgi", {
-                             room: room,
-                             "user-id": 123,
+                         $.post("/1/push", {
+                             room: self.room,
+                             "user-key": self.user_key,
                              "thread-id": 0,
                              content: content_xml,
                          }, console.log.bind(console))
@@ -160,105 +221,102 @@ function message_form(room, onsubmit) {
                  }))
 }
 
-function navbar(room) {
-    return E_("nav", {class: "navbar navbar-default navbar-fixed-top",
-                      role: "navigation"},
-              E_("div", {class: "navbar-header"},
-                 E_("button", {type: "button", class: "navbar-toggle",
-                               "data-toggle": "collapse",
-                               "data-target": ".navbar-ex1-collapse"},
-                    E_("span", {class: "sr-only"}, "Toggle navigation"),
-                    E_("span", {class: "icon-bar"}, ""),
-                    E_("span", {class: "icon-bar"}, ""),
-                    E_("span", {class: "icon-bar"}, "")),
-                 E_("a", {class: "navbar-brand", href: "#"}, room)
-                ))
-}
+ChatBoard.prototype.make_container = function() {
+    var self = this
 
-$(document).ready(function(){
-    var room = "elepaio"
-    var interval = 1000
-    var timeout_id
-    var container
-    var title = document.title = room + " - chat"
-    var e = E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
+    var e = E_("div",
+               {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
                function(doc) {
                    var e = E_("div", {id: "messages"})(doc)
-                   container = e
+                   self.container = e
                    return e
                },
-               message_form(room, function() {
-                   if (timeout_id) clearTimeout(timeout_id)
-                   timeout_id = null
-                   reload()
+               self.message_form(function() {
+                   if (self.timeout_id) clearTimeout(self.timeout_id)
+                   self.timeout_id = null
+                   self.reload()
                }))
 
     $(document.body)
-        .append(navbar(room)(document))
+        .append(navbar(self.room)(document))
         .append(e(document))
+}
 
-    var add_message = message_adder(container)
-
-    var last_index = 0
-    $.get("pull.cgi", {room: room},
-          function(msg) {
-              last_index = match_and_append_message(msg, add_message)
-              setTimeout(function() {
-                  var body = $(document.body)
-                  var scrollto = Math.max(0, body.height() - $(window).height())
-                  body.animate({scrollTop: scrollto}, function() {
-                      console.log("scroll complete")
-                  })
-              }, 10)
-          })
-
+ChatBoard.prototype.reload = function() {
+    var self = this
     var badge = 0
-    var reload = function() {
-        $.get("pull.cgi", {room: room, after: last_index},
-              function(msg) {
-                  var idx = match_and_append_message(msg, add_message)
-                  if (idx > last_index) {
-                      if (! document.hasFocus()) {
-                          badge += (idx - last_index)
-                          document.title = "[" + badge + "]" + title
-                          $(window).focus(function() {
-                              document.title = title
-                              badge = 0
-                          })
-                      }
+    var title = document.title = self.room + " - chat"
 
-                      last_index = idx
-                      interval = 1000
-
-                      var body = $(document.body)
-                      if (body.height() - (body.scrollTop() + $(window).height()) < 70) {
-                          body.scrollTop(body.height() - $(window).height())
-                      }
-
-                  } else {
-                      // double the interval (up to 1 minite) if no message received
-                      interval = Math.min(interval * 2, 60 * 1000)
+    console.log("pull 2", self)
+    $.get("/1/pull", {room: self.room, after: self.last_index},
+          function(msg) {
+              var idx = match_and_append_message(msg, self.add_message)
+              if (idx > self.last_index) {
+                  if (! document.hasFocus()) {
+                      badge += (idx - self.last_index)
+                      document.title = "[" + badge + "]" + title
+                      $(window).focus(function() {
+                          document.title = title
+                          badge = 0
+                      })
                   }
-                  timeout_id = setTimeout(reload, interval)
-                  // console.log("interval", interval)
-              })
-            .fail(function() {
-                if (timeout_id) clearTimeout(timeout_id)
-                timeout_id = null
-                console.log("Failed")
+
+                  self.last_index = idx
+                  self.interval = 1000
+
+                  var body = $(document.body)
+                  if (body.height() - (body.scrollTop() + $(window).height()) < 70) {
+                      body.scrollTop(body.height() - $(window).height())
+                  }
+
+              } else {
+                  // double the interval (up to 1 minite) if no message received
+                  self.interval = Math.min(self.interval * 2, 60 * 1000)
+              }
+              self.timeout_id = setTimeout(self.reload.bind(self), self.interval)
+              // console.log("self.interval", self.interval)
+          })
+        .fail(function() {
+            if (self.timeout_id) clearTimeout(self.timeout_id)
+            self.timeout_id = null
+            console.log("Failed")
+        })
+}
+
+$(document).ready(function(){
+    var user_key = $.cookie("user-key")
+
+    if (user_key) {
+        new ChatBoard({room: "elepaio", user_key: user_key})
+    } else {
+        $.post("/1/register")
+            .success(function(msg) {
+                // user_key = $.cookie("user-key")
+
+                var M = xmlmatch.M
+                var C = xmlmatch.C
+                var m = M("xxx",
+                         C(M("user",
+                             function(e) {
+                                 var user_id = e.getAttribute("id")
+                                 user_key = e.getAttribute("key")
+                                 console.log("user ID", user_id)
+                                 return user_id && user_key
+                             })))
+
+                var e = document.createElement("xxx")
+                e.innerHTML = msg
+                // console.log(e)
+                var result = m(e)
+
+                if (result) {
+                    console.log("user-key", user_key)
+                    new ChatBoard({room: "elepaio", user_key: user_key})
+                } else {
+                    throw new Error("failed to get a user key")
+                }
             })
     }
-    timeout_id = setTimeout(reload, interval)
-
-    var pusher_channel = make_pusher(room)
-    pusher_channel.bind('update', function(data) {
-        if (data.index > last_index) {
-            if (timeout_id) clearTimeout(timeout_id)
-            timeout_id = null
-            reload()
-            // console.log(data);
-        }
-    });
 })
 
 }()

@@ -1,3 +1,6 @@
 [submodule "public/lazy-dom"]
 	path = public/lazy-dom
 	url = git@github.com:torus/js-lazy-dom.git
+[submodule "public/jquery-cookie"]
+	path = public/jquery-cookie
+	url = https://github.com/carhartl/jquery-cookie.git
