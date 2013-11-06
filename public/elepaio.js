@@ -13,10 +13,13 @@ function make_pusher(room) {
 }
 
 function make_message(name, text) {
+    var lines = text.split(/\n/)
     return E_("tr", {},
               E_("td", {},
                  E_("span", {style: "font-weight:bold"}, name, "> "),
-                 E_("span", {}, text)))
+                 E_("span", {}, lines.slice(1).reduce(function(part, cur) {
+                     return part.concat([E_("br"), cur])
+                 }, [lines[0]]))))
 }
 
 function message_adder(container) {
