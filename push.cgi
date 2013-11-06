@@ -14,18 +14,18 @@
 (use elepaio.id)
 (use pusher)
 
-(define *elep* (elepaio-connect (redis-open "127.0.0.1" 6379) 0))
 (define *pusher-app-id* (file->string "PUSHER_APP_ID"))
 (define *pusher-key* (file->string "PUSHER_KEY"))
 (define *pusher-secret* (file->string "PUSHER_SECRET"))
 
-(define (get-user-id params)
-  (or (cgi-get-parameter "user-id" params)
-      (let1 key (cgi-get-parameter "user-key" params)
-            (and key (elepaio-lookup-key *elep* key)))
-      0))
-
 (define (main args)
+  (define *elep* (elepaio-connect (redis-open "127.0.0.1" 6379) 0))
+  (define (get-user-id params)
+    (or (cgi-get-parameter "user-id" params)
+        (let1 key (cgi-get-parameter "user-key" params)
+              (and key (elepaio-lookup-key *elep* key)))
+        0))
+
   (cgi-main
    (lambda (params)
      (let ((room (cgi-get-parameter "room" params))
