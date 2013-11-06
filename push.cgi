@@ -1,4 +1,4 @@
-#!/home/toru/local/gauche/bin/gosh
+#!/home/toru/local/gauche-head/bin/gosh
 ;; -*- scheme -*-
 
 (use www.cgi)
