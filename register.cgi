@@ -13,9 +13,9 @@
 (use elepaio)
 (use elepaio.id)
 
-(define *elep* (elepaio-connect (redis-open "127.0.0.1" 6379) 0))
-
 (define (main args)
+  (define *elep* (elepaio-connect (redis-open "127.0.0.1" 6379) 0))
+
   (cgi-main
    (lambda (params)
      (let ((key (elepaio-new-key! *elep*))

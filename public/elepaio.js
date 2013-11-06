@@ -86,7 +86,12 @@ function match_and_append_message(msg, add_message) {
     var e = document.createElement("xxx")
     e.innerHTML = msg
     // console.log(e)
-    var result = m(e)
+    var result
+    try {
+        result = m(e)
+    } catch(ex) {
+        console.error(ex)
+    }
     // console.log(result)
     // console.log(last_index)
 
@@ -247,6 +252,9 @@ ChatBoard.prototype.reload = function() {
     var badge = 0
     var title = document.title = self.room + " - chat"
 
+    if (self.reloading) return
+    self.reloading = true
+
     console.log("pull 2", self)
     $.get("/1/pull", {room: self.room, after: self.last_index},
           function(msg) {
@@ -275,11 +283,14 @@ ChatBoard.prototype.reload = function() {
               }
               self.timeout_id = setTimeout(self.reload.bind(self), self.interval)
               // console.log("self.interval", self.interval)
+
+              self.reloading = false
           })
         .fail(function() {
             if (self.timeout_id) clearTimeout(self.timeout_id)
             self.timeout_id = null
             console.log("Failed")
+            self.reloading = false
         })
 }
 
@@ -307,13 +318,19 @@ $(document).ready(function(){
                 var e = document.createElement("xxx")
                 e.innerHTML = msg
                 // console.log(e)
-                var result = m(e)
+                var result
+                var exc
+                try {
+                    result = m(e)
+                } catch(e) {
+                    exc = e
+                }
 
                 if (result) {
                     console.log("user-key", user_key)
                     new ChatBoard({room: "elepaio", user_key: user_key})
                 } else {
-                    throw new Error("failed to get a user key")
+                    console.error("failed to get a user key", exc)
                 }
             })
     }
