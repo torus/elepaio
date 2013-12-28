@@ -131,7 +131,7 @@ var ChatBoard = function(params) {
 
     self.last_index = 0
     console.log("pull 1", self)
-    $.get("/1/pull", {room: self.room},
+    $.get("/1/messages/pull", {room: self.room},
           function(msg) {
               self.last_index = match_and_append_message(msg, self.add_message)
               setTimeout(function() {
@@ -214,7 +214,7 @@ ChatBoard.prototype.message_form = function(onsubmit) {
                                                  E_("screen-name", {}, screen_name),
                                                  E_("text", {}, text)))(doc).innerHTML
                          console.log(content_xml)
-                         $.post("/1/push", {
+                         $.post("/1/messages/push", {
                              room: self.room,
                              "user-key": self.user_key,
                              "thread-id": 0,
@@ -259,7 +259,7 @@ ChatBoard.prototype.reload = function() {
     self.reloading = true
 
     console.log("pull 2", self)
-    $.get("/1/pull", {room: self.room, after: self.last_index},
+    $.get("/1/messages/pull", {room: self.room, after: self.last_index},
           function(msg) {
               var idx = match_and_append_message(msg, self.add_message)
               if (idx > self.last_index) {
@@ -303,7 +303,7 @@ $(document).ready(function(){
     if (user_key) {
         new ChatBoard({room: "elepaio", user_key: user_key})
     } else {
-        $.post("/1/register")
+        $.post("/1/users/register")
             .success(function(msg) {
                 // user_key = $.cookie("user-key")
 

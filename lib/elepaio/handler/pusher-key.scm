@@ -1,10 +1,6 @@
-(define-module elepaio.handler.pusher-key
-  (use www.cgi)
-  (use file.util)
-  (use makiki)
-  (export handler-main))
-
-(select-module elepaio.handler.pusher-key)
+(use www.cgi)
+(use file.util)
+(use makiki)
 
 (define *pusher-key* (file->string "PUSHER_KEY"))
 
