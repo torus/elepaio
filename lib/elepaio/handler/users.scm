@@ -27,11 +27,10 @@
            (id (elepaio-new-id! *elep*)))
        (elepaio-register-key! *elep* id key)
        (response-header-push! req :content-type "text/html; charset=UTF-8")
-       (response-header-push! req :set-cookie2
+       (response-header-push! req :set-cookie
                               (string-join (construct-cookie-string
                                             `(("user-key" ,key
                                                :path "/"
-                                               :expires ,(+ (sys-time) (* 60 60 24 365))
                                                :max-age ,(* 60 60 24 365))))
                                            ","))
        (respond/ok

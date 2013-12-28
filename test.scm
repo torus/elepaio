@@ -82,99 +82,100 @@
        (elepaio-get-latest-entries *elep* room 10))
 
 
-(test-section "register CGI")
+;; (test-section "register CGI")
 
-(match-define ((("content-type" _)
-                ("set-cookie" (? #/user-key=/)))
-               `(*TOP* (user (@ (key ,user-key) (id ,idstr)))))
-              (let-values (((header body)
-                            (run-cgi-script->sxml "./register.cgi")))
-                (list header body)))
-(define registered-user-id (read-from-string idstr))
+;; (match-define ((("content-type" _)
+;;                 ("set-cookie" (? #/user-key=/)))
+;;                `(*TOP* (user (@ (key ,user-key) (id ,idstr)))))
+;;               (let-values (((header body)
+;;                             (run-cgi-script->sxml "./register.cgi")))
+;;                 (list header body)))
 
-(test* "id" #t (number? registered-user-id))
-(test* "key" #t (string? user-key))
+;; (define registered-user-id (read-from-string idstr))
 
-(test* "key registered" registered-user-id
-       (read-from-string (redis-hget *redis* "elepaio:user:keys" user-key)))
+;; (test* "id" #t (number? registered-user-id))
+;; (test* "key" #t (string? user-key))
 
-(test-section "app ID CGI")
+;; (test* "key registered" registered-user-id
+;;        (read-from-string (redis-hget *redis* "elepaio:user:keys" user-key)))
 
-(test* "pusher-key.cgi"
-       #`"function PUSHER_KEY(){return \",|*pusher-key*|\"}"
-       (let-values (((header body)
-                     (run-cgi-script->string "./pusher-key.cgi")))
-         body))
+;; (test-section "app ID CGI")
 
-(test-section "push CGI")
+;; (test* "pusher-key.cgi"
+;;        #`"function PUSHER_KEY(){return \",|*pusher-key*|\"}"
+;;        (let-values (((header body)
+;;                      (run-cgi-script->string "./pusher-key.cgi")))
+;;          body))
 
-(define post-content (srl:sxml->xml `(content ,@(content 3))))
+;; (test-section "push CGI")
 
-(test* "push.cgi"
-       '`(*TOP* (ok (@ (index "2"))))
-       (let-values (((header body)
-                     (run-cgi-script->sxml "./push.cgi"
-                                           :environment '((REQUEST_METHOD . "POST"))
-                                           :parameters `((room . ,room)
-                                                         (user-key . ,user-key)
-                                                         (thread-id . ,thread-id)
-                                                         (content . ,post-content)))))
-         body)
-       check-match)
+;; (define post-content (srl:sxml->xml `(content ,@(content 3))))
 
-(test* "key and id"
-       `((elepaio-entry (index . 2)
-                        (user-id . ,registered-user-id)
-                        (thread-id . ,thread-id)
-                        (content ,@(content 3))))
-       (elepaio-get-latest-entries *elep* room 1))
+;; (test* "push.cgi"
+;;        '`(*TOP* (ok (@ (index "2"))))
+;;        (let-values (((header body)
+;;                      (run-cgi-script->sxml "./push.cgi"
+;;                                            :environment '((REQUEST_METHOD . "POST"))
+;;                                            :parameters `((room . ,room)
+;;                                                          (user-key . ,user-key)
+;;                                                          (thread-id . ,thread-id)
+;;                                                          (content . ,post-content)))))
+;;          body)
+;;        check-match)
 
-(test-section "pull CGI")
+;; (test* "key and id"
+;;        `((elepaio-entry (index . 2)
+;;                         (user-id . ,registered-user-id)
+;;                         (thread-id . ,thread-id)
+;;                         (content ,@(content 3))))
+;;        (elepaio-get-latest-entries *elep* room 1))
 
-(test* "pull.cgi"
-       '(*TOP* (entries ('@ (room (? string?)))
-                        (entry ('@ (index (? string?)))
-                               (user-id (? string?))
-                               (thread-id (? string?))
-                               (content (screen-name (? string?))
-                                        (text (? string?))))
-                        ..2
-                        ))
-       (let-values (((header body)
-                     (run-cgi-script->sxml "./pull.cgi"
-                                           :parameters `((room . ,room)
-                                                         (count . "100")))))
-         body)
-       check-match)
+;; (test-section "pull CGI")
 
-(test* "count paramter ommited"
-       '(*TOP* (entries ('@ (room (? string?)))
-                        (entry ('@ (index (? string?)))
-                               (user-id (? string?))
-                               (thread-id (? string?))
-                               (content (screen-name (? string?))
-                                        (text (? string?))))
-                        ..2
-                        ))
-       (let-values (((header body)
-                     (run-cgi-script->sxml "./pull.cgi"
-                                           :parameters `((room . ,room)))))
-         body)
-       check-match)
+;; (test* "pull.cgi"
+;;        '(*TOP* (entries ('@ (room (? string?)))
+;;                         (entry ('@ (index (? string?)))
+;;                                (user-id (? string?))
+;;                                (thread-id (? string?))
+;;                                (content (screen-name (? string?))
+;;                                         (text (? string?))))
+;;                         ..2
+;;                         ))
+;;        (let-values (((header body)
+;;                      (run-cgi-script->sxml "./pull.cgi"
+;;                                            :parameters `((room . ,room)
+;;                                                          (count . "100")))))
+;;          body)
+;;        check-match)
 
-(elepaio-push! *elep* room thread-id user-id (content 4))
-(elepaio-push! *elep* room thread-id user-id (content 5))
-(elepaio-push! *elep* room thread-id user-id (content 6))
-(elepaio-push! *elep* room thread-id user-id (content 7))
+;; (test* "count paramter ommited"
+;;        '(*TOP* (entries ('@ (room (? string?)))
+;;                         (entry ('@ (index (? string?)))
+;;                                (user-id (? string?))
+;;                                (thread-id (? string?))
+;;                                (content (screen-name (? string?))
+;;                                         (text (? string?))))
+;;                         ..2
+;;                         ))
+;;        (let-values (((header body)
+;;                      (run-cgi-script->sxml "./pull.cgi"
+;;                                            :parameters `((room . ,room)))))
+;;          body)
+;;        check-match)
 
-(test* "with after paramter"
-       3
-       (let-values (((header body)
-                     (run-cgi-script->sxml "./pull.cgi"
-                                           :parameters `((room . ,room)
-                                                         (after . 3)))))
-         (length (cddadr body)))
-       check-match)
+;; (elepaio-push! *elep* room thread-id user-id (content 4))
+;; (elepaio-push! *elep* room thread-id user-id (content 5))
+;; (elepaio-push! *elep* room thread-id user-id (content 6))
+;; (elepaio-push! *elep* room thread-id user-id (content 7))
+
+;; (test* "with after paramter"
+;;        3
+;;        (let-values (((header body)
+;;                      (run-cgi-script->sxml "./pull.cgi"
+;;                                            :parameters `((room . ,room)
+;;                                                          (after . 3)))))
+;;          (length (cddadr body)))
+;;        check-match)
 
 
 (test-end)
