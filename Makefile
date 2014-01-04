@@ -13,3 +13,7 @@ check: test.scm
 
 run:
 	$(GOSH) run-makiki.scm
+
+update-makiki:
+	cd ../Gauche-makiki && git pull origin master &&\
+	./configure && make && make check && make install

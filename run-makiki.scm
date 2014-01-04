@@ -2,16 +2,16 @@
 
 (add-load-path "./lib" :relative)
 
-;; /1/resource/method[.ext]
+;; /1/resource/action[.ext]
 
 (define-http-handler #/\/1\/([\w-]+)\/([\w-]+)(\.\w+)?\/?$/
   (^[req app]
     (let ((mod (make-module #f))
           (resource ((slot-ref req 'path-rxmatch) 1))
-          (method ((slot-ref req 'path-rxmatch) 2))
+          (action ((slot-ref req 'path-rxmatch) 2))
           (ext ((slot-ref req 'path-rxmatch) 3)))
       (load #`"./lib/elepaio/handler/,|resource|.scm" :environment mod)
-      ((global-variable-ref mod (string->symbol method)) req app))))
+      ((global-variable-ref mod (string->symbol action)) req app))))
 
 ;; /1/path/to/resource.js
 

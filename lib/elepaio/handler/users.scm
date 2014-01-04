@@ -35,5 +35,5 @@
                                            ","))
        (respond/ok
         req
-        (srl:sxml->xml
-         `(*TOP* (user (@ (id ,id) (key ,key)))))))))
+        `(sxml
+          (user (@ (id ,id) (key ,key))))))))

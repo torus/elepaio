@@ -18,27 +18,26 @@
              (entries (if after
                           (elepaio-get-entries *elep* room (x->integer after) count)
                           (elepaio-get-latest-entries *elep* room count))))
-        (response-header-push! req :content-type "text/html; charset=UTF-8")
-        (respond/ok req
-                    (srl:sxml->xml
-                     `(*TOP* (entries
-                              (@ (room ,room))
-                              ,@(map
-                                 (lambda (e)
-                                   (match
-                                    e
-                                    (`(elepaio-entry (index . ,index)
-                                                     (user-id . ,user-id)
-                                                     (thread-id . ,thread-id)
-                                                     (content . ((screen-name ,screen-name)
-                                                                 (text ,text))))
-                                     `(entry (@ (index ,index))
-                                             (user-id ,user-id)
-                                             (thread-id ,thread-id)
-                                             (content (screen-name ,screen-name)
-                                                      (text ,text))))
-                                    (else '(error "match failed"))))
-                                 entries)))))))))
+        (let ((body `(sxml
+                      (entries
+                       (@ (room ,room))
+                       ,@(map
+                          (lambda (e)
+                            (match
+                             e
+                             (`(elepaio-entry (index . ,index)
+                                              (user-id . ,user-id)
+                                              (thread-id . ,thread-id)
+                                              (content . ((screen-name ,screen-name)
+                                                          (text ,text))))
+                              `(entry (@ (index ,index))
+                                      (user-id ,(x->string user-id))
+                                      (thread-id ,(x->string thread-id))
+                                      (content (screen-name ,screen-name)
+                                               (text ,text))))
+                             (else '(error "match failed"))))
+                          entries)))))
+          (respond/ok req body))))))
 
 (use file.util)
 (use sxml.serializer)
@@ -86,6 +85,5 @@
                   )
              (http-post "api.pusherapp.com"
                         (append uri `((auth_signature ,sign))) json))
-           (response-header-push! req :content-type "text/html; charset=UTF-8")
            (respond/ok req
-                       (srl:sxml->xml `(ok (@ (index ,index)))))))))))
+                       `(sxml (ok (@ (index ,index)))))))))))
