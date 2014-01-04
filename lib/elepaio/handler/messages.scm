@@ -52,7 +52,6 @@
 (define *pusher-key* (file->string "PUSHER_KEY"))
 (define *pusher-secret* (file->string "PUSHER_SECRET"))
 
-
 (define push
   (with-post-parameters
    (lambda (req app)

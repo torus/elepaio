@@ -14,6 +14,7 @@
 (use elepaio)
 (test-module 'elepaio)
 
+(use elepaio.util.test)
 
 (define *redis* (redis-open "127.0.0.1" 6379))
 (define *pusher-key* (file->string "PUSHER_KEY"))
@@ -107,28 +108,27 @@
 ;;                      (run-cgi-script->string "./pusher-key.cgi")))
 ;;          body))
 
-;; (test-section "push CGI")
+(test-section "push CGI")
 
-;; (define post-content (srl:sxml->xml `(content ,@(content 3))))
+(define post-content (srl:sxml->xml `(content ,@(content 3))))
 
-;; (test* "push.cgi"
-;;        '`(*TOP* (ok (@ (index "2"))))
-;;        (let-values (((header body)
-;;                      (run-cgi-script->sxml "./push.cgi"
-;;                                            :environment '((REQUEST_METHOD . "POST"))
-;;                                            :parameters `((room . ,room)
-;;                                                          (user-key . ,user-key)
-;;                                                          (thread-id . ,thread-id)
-;;                                                          (content . ,post-content)))))
-;;          body)
-;;        check-match)
+#;(test* "push.cgi"
+       '`(*TOP* (ok (@ (index "2"))))
+       (let ((mod-push (make-module #f))
+             (params `((room . ,room)
+                       (user-key . "user-key-xxx")
+                       (thread-id . ,thread-id)
+                       (content . ,post-content))))
+         (load "./lib/elepaio/handler/messages.scm" :environment mod-push)
+         ((global-variable-ref mod-push 'push) (make-mock-request params ()) ()))
+       check-match)
 
-;; (test* "key and id"
-;;        `((elepaio-entry (index . 2)
-;;                         (user-id . ,registered-user-id)
-;;                         (thread-id . ,thread-id)
-;;                         (content ,@(content 3))))
-;;        (elepaio-get-latest-entries *elep* room 1))
+#;(test* "key and id"
+       `((elepaio-entry (index . 2)
+                        (user-id . 123)
+                        (thread-id . ,thread-id)
+                        (content ,@(content 3))))
+       (elepaio-get-latest-entries *elep* room 1))
 
 ;; (test-section "pull CGI")
 
