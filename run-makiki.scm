@@ -11,7 +11,8 @@
           (action ((slot-ref req 'path-rxmatch) 2))
           (ext ((slot-ref req 'path-rxmatch) 3)))
       (load #`"./lib/elepaio/handler/,|resource|.scm" :environment mod)
-      ((global-variable-ref mod (string->symbol action)) req app))))
+      (respond/ok req
+                  ((global-variable-ref mod (string->symbol action)) req app)))))
 
 ;; /1/path/to/resource.js
 

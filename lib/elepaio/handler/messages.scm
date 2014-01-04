@@ -18,26 +18,25 @@
              (entries (if after
                           (elepaio-get-entries *elep* room (x->integer after) count)
                           (elepaio-get-latest-entries *elep* room count))))
-        (let ((body `(sxml
-                      (entries
-                       (@ (room ,room))
-                       ,@(map
-                          (lambda (e)
-                            (match
-                             e
-                             (`(elepaio-entry (index . ,index)
-                                              (user-id . ,user-id)
-                                              (thread-id . ,thread-id)
-                                              (content . ((screen-name ,screen-name)
-                                                          (text ,text))))
-                              `(entry (@ (index ,index))
-                                      (user-id ,(x->string user-id))
-                                      (thread-id ,(x->string thread-id))
-                                      (content (screen-name ,screen-name)
-                                               (text ,text))))
-                             (else '(error "match failed"))))
-                          entries)))))
-          (respond/ok req body))))))
+        `(sxml
+          (entries
+           (@ (room ,room))
+           ,@(map
+              (lambda (e)
+                (match
+                 e
+                 (`(elepaio-entry (index . ,index)
+                                  (user-id . ,user-id)
+                                  (thread-id . ,thread-id)
+                                  (content . ((screen-name ,screen-name)
+                                              (text ,text))))
+                  `(entry (@ (index ,index))
+                          (user-id ,(x->string user-id))
+                          (thread-id ,(x->string thread-id))
+                          (content (screen-name ,screen-name)
+                                   (text ,text))))
+                 (else '(error "match failed"))))
+              entries)))))))
 
 (use file.util)
 (use sxml.serializer)
@@ -85,5 +84,4 @@
                   )
              (http-post "api.pusherapp.com"
                         (append uri `((auth_signature ,sign))) json))
-           (respond/ok req
-                       `(sxml (ok (@ (index ,index)))))))))))
+           `(sxml (ok (@ (index ,index))))))))))

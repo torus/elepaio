@@ -33,7 +33,5 @@
                                                :path "/"
                                                :max-age ,(* 60 60 24 365))))
                                            ","))
-       (respond/ok
-        req
-        `(sxml
-          (user (@ (id ,id) (key ,key))))))))
+       `(sxml
+         (user (@ (id ,id) (key ,key)))))))
