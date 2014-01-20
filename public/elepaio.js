@@ -1,9 +1,11 @@
 +function() {
-Pusher.log = function(message) {
-    if (window.console && window.console.log) {
-        window.console.log(message);
+if (typeof Pusher != "undefined") {
+    Pusher.log = function(message) {
+        if (window.console && window.console.log) {
+            window.console.log(message)
+        }
     }
-};
+}
 
 function make_pusher(room) {
     var pusher = new Pusher(PUSHER_KEY());
@@ -297,11 +299,11 @@ ChatBoard.prototype.reload = function() {
         })
 }
 
-$(document).ready(function(){
+show_chat_board = function(room_name) {
     var user_key = $.cookie("user-key")
 
     if (user_key) {
-        new ChatBoard({room: "elepaio", user_key: user_key})
+        new ChatBoard({room: room_name, user_key: user_key})
     } else {
         $.post("/1/users/register")
             .success(function(msg) {
@@ -331,12 +333,49 @@ $(document).ready(function(){
 
                 if (result) {
                     console.log("user-key", user_key)
-                    new ChatBoard({room: "elepaio", user_key: user_key})
+                    new ChatBoard({room: room_name, user_key: user_key})
                 } else {
                     console.error("failed to get a user key", exc)
                 }
             })
     }
-})
+}
+
+show_top_page = function() {
+    console.debug("show_top_page")
+    var body = [
+        navbar("SCRW"),
+        E_("div", {class: "container", style: "padding-top: 70px; padding-bottom: 20px"},
+           E_("div", {class: "row"},
+              E_("div", {class: "col-md-12"},
+                 E_("h1", {}, "Join/Create a Room"),
+                 E_("form", {class: "form-inline", role: "form", id: "room_form"},
+                    E_("div", {class: "form-group"},
+                       E_("label", {class: "sr-only", for: "room_textinput"},
+                          "Room Name"),
+                       E_("input", {class: "form-control", type: "text",
+                                    placeholder: "Room Name",
+                                    id: "room_textinput"})),
+                    " ",
+                    E_("button", {type: "submit", class: "btn btn-default"}, "GO"))))),
+    ]
+
+    $(document).ready(function() {
+        body.forEach(function(f){
+            $("#elepaio_content").append(f(document))
+        })
+
+        $("#room_form").submit(function() {
+            var room = $("#room_textinput").get(0).value
+            console.log("#room_form", room)
+            var m = room.match(/\s*(\S+)\s*/)
+            if (m) {
+                console.log("#room_form", m[1])
+                location.href = "/room/" + m[1] + ".html"
+            }
+            return false
+        })
+    })
+}
 
 }()

@@ -14,6 +14,15 @@
       (respond/ok req
                   ((global-variable-ref mod (string->symbol action)) req app)))))
 
+;; /room/<roomname>.html[#<thread_id>]
+(define-http-handler #/room\/(.+?)\.html$/
+  (^[req app]
+    (respond/ok req '(file "./html/index.html"))
+    ))
+
+;; /archive/<roomname>/<roomname>_<index>.html
+
+
 ;; /1/path/to/resource.js
 
 (define-http-handler #/\/1\/(.+?)(\.js)?\/?$/

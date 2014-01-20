@@ -82,7 +82,6 @@
                         (content ,@(content 2))))
        (elepaio-get-latest-entries *elep* room 10))
 
-
 ;; (test-section "register CGI")
 
 ;; (match-define ((("content-type" _)
