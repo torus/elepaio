@@ -51,52 +51,46 @@ function match_and_append_message(msg, add_message) {
 
     var last_index = -1
 
-    var m = // M("xxx",
-            //   C(
-                  M("entries",
-                  C(sp,
-                    M("entry",
-                      function(node) {
-                          var ent = {}
-                          var index = node.getAttribute("index")
-                          // console.log("index", index)
-                          if (index != null && +index > last_index) {
-                              last_index = +index
-                              var res = C(sp,
-                                          M("user-id", function(x){
-                                              ent.user_id = x.textContent
-                                              return true}),
-                                          M("thread-id", function(x){
-                                              ent.thread_id = x.textContent
-                                              return true}),
-                                          M("content",
-                                            C(sp,
-                                              M("screen-name", function(x){
-                                                  ent.name = x.textContent
-                                                  return true
-                                              }),
-                                              M("text", function(x){
-                                                  ent.text = x.textContent
-                                                  return true
-                                              })))
-                                         )(node)
-                              add_message(ent)
-                              return res
-                          } else {
-                              // console.log("end", node, index, last_index)
-                              return false
-                          }
-                      }),
-                    M("error", function(x){console.log(x); return true})
-                   ))//))
-    // var e = document.createElement("xxx")
-    // e.innerHTML = msg
-    // console.log(e)
+    var m = M("entries",
+              C(sp,
+                M("entry",
+                  function(node) {
+                      var ent = {}
+                      var index = node.getAttribute("index")
+                      // console.log("index", index)
+                      if (index != null && +index > last_index) {
+                          last_index = +index
+                          var res = C(sp,
+                                      M("user-id", function(x){
+                                          ent.user_id = x.textContent
+                                          return true}),
+                                      M("thread-id", function(x){
+                                          ent.thread_id = x.textContent
+                                          return true}),
+                                      M("content",
+                                        C(sp,
+                                          M("screen-name", function(x){
+                                              ent.name = x.textContent
+                                              return true
+                                          }),
+                                          M("text", function(x){
+                                              ent.text = x.textContent
+                                              return true
+                                          })))
+                                     )(node)
+                          add_message(ent)
+                          return res
+                      } else {
+                          // console.log("end", node, index, last_index)
+                          return false
+                      }
+                  }),
+                M("error", function(x){console.log(x); return true})
+               ))
     var result
     try {
         console.log("msg.documentElement", msg.documentElement)
         result = m(msg.documentElement)
-        // result = m(e)
     } catch(ex) {
         console.error(ex)
     }
@@ -315,19 +309,14 @@ show_chat_board = function(room_name) {
 
                 var M = xmlmatch.M
                 var C = xmlmatch.C
-                var m = // M("xxx",
-                        //  C(
-                             M("user",
-                             function(e) {
-                                 var user_id = e.getAttribute("id")
-                                 user_key = e.getAttribute("key")
-                                 console.log("user ID", user_id)
-                                 return user_id && user_key
-                             })//))
+                var m = M("user",
+                          function(e) {
+                              var user_id = e.getAttribute("id")
+                              user_key = e.getAttribute("key")
+                              console.log("user ID", user_id)
+                              return user_id && user_key
+                          })
 
-                // var e = document.createElement("xxx")
-                // e.innerHTML = msg
-                // console.log(e)
                 var result
                 var exc
                 try {
