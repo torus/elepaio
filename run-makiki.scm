@@ -12,7 +12,8 @@
           (ext ((slot-ref req 'path-rxmatch) 3)))
       (load #`"./lib/elepaio/handler/,|resource|.scm" :environment mod)
       (respond/ok req
-                  ((global-variable-ref mod (string->symbol action)) req app)))))
+                  ((global-variable-ref mod (string->symbol action)) req app)
+                  :content-type "application/xml"))))
 
 ;; /room/<roomname>.html[#<thread_id>]
 (define-http-handler #/room\/(.+?)\.html$/

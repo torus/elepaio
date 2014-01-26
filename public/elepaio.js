@@ -51,8 +51,9 @@ function match_and_append_message(msg, add_message) {
 
     var last_index = -1
 
-    var m = M("xxx",
-              C(M("entries",
+    var m = // M("xxx",
+            //   C(
+                  M("entries",
                   C(sp,
                     M("entry",
                       function(node) {
@@ -87,13 +88,15 @@ function match_and_append_message(msg, add_message) {
                           }
                       }),
                     M("error", function(x){console.log(x); return true})
-                   ))))
-    var e = document.createElement("xxx")
-    e.innerHTML = msg
+                   ))//))
+    // var e = document.createElement("xxx")
+    // e.innerHTML = msg
     // console.log(e)
     var result
     try {
-        result = m(e)
+        console.log("msg.documentElement", msg.documentElement)
+        result = m(msg.documentElement)
+        // result = m(e)
     } catch(ex) {
         console.error(ex)
     }
@@ -135,6 +138,7 @@ var ChatBoard = function(params) {
     console.log("pull 1", self)
     $.get("/1/messages/pull", {room: self.room},
           function(msg) {
+              console.log("pull msg", msg)
               self.last_index = match_and_append_message(msg, self.add_message)
               setTimeout(function() {
                   var body = $(document.body)
@@ -311,22 +315,23 @@ show_chat_board = function(room_name) {
 
                 var M = xmlmatch.M
                 var C = xmlmatch.C
-                var m = M("xxx",
-                         C(M("user",
+                var m = // M("xxx",
+                        //  C(
+                             M("user",
                              function(e) {
                                  var user_id = e.getAttribute("id")
                                  user_key = e.getAttribute("key")
                                  console.log("user ID", user_id)
                                  return user_id && user_key
-                             })))
+                             })//))
 
-                var e = document.createElement("xxx")
-                e.innerHTML = msg
+                // var e = document.createElement("xxx")
+                // e.innerHTML = msg
                 // console.log(e)
                 var result
                 var exc
                 try {
-                    result = m(e)
+                    result = m(msg.documentElement)
                 } catch(e) {
                     exc = e
                 }
