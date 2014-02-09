@@ -1,6 +1,7 @@
 (use makiki)
 
 (add-load-path "./lib" :relative)
+(use elepaio)
 
 ;; /1/resource/action[.ext]
 
@@ -22,7 +23,11 @@
     ))
 
 ;; /archive/<roomname>/<roomname>_<index>.html
-
+(define-http-handler #/archive\/(.+?)\/\1_(\d+?)\.html$/
+  (^[req app]
+    (let ((room ((slot-ref req 'path-rxmatch) 1))
+          (index ((slot-ref req 'path-rxmatch) 2)))
+      (respond/ok req `(sxml ,(elepaio-archive-sxml room index))))))
 
 ;; /1/path/to/resource.js
 

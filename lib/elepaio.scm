@@ -1,6 +1,8 @@
 (define-module elepaio
   (use gauche.sequence)
   (use util.match)
+  (use sxml.ssax)
+
   (use redis)
 
   (export elepaio-connect
@@ -9,6 +11,7 @@
           elepaio-get-entries
           elepaio-get-latest-entries
           elepaio-get-redis
+          elepaio-archive-sxml
           ))
 
 (select-module elepaio)
@@ -58,3 +61,41 @@
                      '(error)))))
          (iota count start)
          (redis-lrange (elepaio-get-redis elep) (elepaio-get-room-key room) start stop))))
+
+(define (make-elp-content room index content)
+  (let1 elep (elepaio-connect (redis-open "127.0.0.1" 6379) 0)
+        `(div (@ (class "container"))
+              (div (@ (class "row"))
+                   (div (@ (class "col-md-12"))
+                        (div (@ (class "panel panel-default"))
+                             (table (@ (class "table"))
+        ,(map
+        (lambda (e)
+                (match
+                 e
+                 (`(elepaio-entry (index . ,index)
+                                  (user-id . ,user-id)
+                                  (thread-id . ,thread-id)
+                                  (content . ((screen-name ,screen-name)
+                                              (text ,text))))
+
+                  `(tr
+                    (td
+                     (span (@ (style "font-weight:bold"))
+                                ,screen-name "> ")
+                     (span ,text))))
+                 (else '(tr (td "match failed")))))
+        (elepaio-get-entries elep room (* index 100) 100)))))))))
+
+(define (elepaio-archive-sxml room index)
+  (let ((doc (ssax:xml->sxml (open-input-file "html/archive.html") '())))
+    (define (m child)
+      (match child
+             [('elp-content children ...) (make-elp-content
+                                           room (x->number index) children)]
+             [('script ('@ attr ...)) (list 'script (cons '@ attr) "")]
+             [('ins ('@ attr ...)) (list 'ins (cons '@ attr) "")]
+             [(a children ...) (cons a (map m children))]
+             [a a]))
+    #?=(cadr (m doc))
+    ))
